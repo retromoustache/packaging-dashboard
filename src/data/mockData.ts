@@ -44,6 +44,18 @@ export const mockPackages: Package[] = [
     auditHistory: [
       { date: '2024-01-15', user: 'John Smith', action: 'Updated', changes: 'Updated to version 2024.001.20643' },
       { date: '2024-01-10', user: 'John Smith', action: 'Created', changes: 'Initial package creation' }
+    ],
+    sccmDeployment: {
+      installCommand: 'msiexec /i "AcroPro.msi" /t "AcroPro.mst" /qn',
+      uninstallCommand: 'msiexec /x {AC76BA86-7AD7-1033-7B44-AC0F074E4100} /qn',
+      productCode: '{AC76BA86-7AD7-1033-7B44-AC0F074E4100}'
+    },
+    scripts: [
+      {
+        name: 'Post-Install-Config.ps1',
+        type: 'powershell',
+        content: '# PowerShell script to apply post-installation configurations\nWrite-Host "Applying custom configurations for Adobe Acrobat Pro..."\n# Add registry keys, etc.'
+      }
     ]
   },
   {

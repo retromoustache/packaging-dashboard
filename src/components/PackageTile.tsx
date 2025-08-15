@@ -5,12 +5,12 @@ import { Monitor, Apple, Calendar, Package as PackageIcon, ChevronRight, Zap, Wr
 interface PackageTileProps {
   package: Package;
   onClick: () => void;
+  theme: string;
 }
 
-export default function PackageTile({ package: pkg, onClick }: PackageTileProps) {
-  const getThemeClasses = () => {
-    const body = document.body;
-    if (body.classList.contains('theme-amoled')) {
+export default function PackageTile({ package: pkg, onClick, theme }: PackageTileProps) {
+  const getThemeClasses = (currentTheme: string) => {
+    if (currentTheme === 'amoled') {
       return {
         container: 'bg-gradient-to-br from-gray-900/80 to-black/80 backdrop-blur-sm border border-gray-800/50 hover:from-gray-800/80 hover:to-gray-900/80 hover:border-gray-700/50',
         title: 'text-white group-hover:text-gray-100',
@@ -20,7 +20,7 @@ export default function PackageTile({ package: pkg, onClick }: PackageTileProps)
         date: 'text-gray-400',
         chevron: 'text-gray-400 group-hover:text-gray-300'
       };
-    } else if (body.classList.contains('theme-light')) {
+    } else if (currentTheme === 'light') {
       return {
         container: 'bg-gradient-to-br from-white/90 to-gray-50/90 backdrop-blur-sm border border-gray-200/50 hover:from-gray-50/90 hover:to-white/90 hover:border-gray-300/50',
         title: 'text-gray-900 group-hover:text-gray-800',
@@ -78,57 +78,61 @@ export default function PackageTile({ package: pkg, onClick }: PackageTileProps)
     }
   };
 
-  const themeClasses = getThemeClasses();
+  const themeClasses = getThemeClasses(theme);
 
   return (
     <div
       onClick={onClick}
-      className={`group ${themeClasses.container} rounded-xl p-6 cursor-pointer transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-1`}
+      className={`group ${themeClasses.container} rounded-xl p-6 min-h-[200px] cursor-pointer transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-1 flex flex-col justify-between`}
     >
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center border border-blue-500/30">
-            <PackageIcon className="h-6 w-6 text-blue-400" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className={`font-semibold text-lg transition-colors ${themeClasses.title}`}>
+      <div>
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center border border-blue-500/30 flex-shrink-0">
+              <PackageIcon className="h-6 w-6 text-blue-400" />
+            </div>
+            <div className="flex-grow">
+              <h3 className={`font-semibold text-lg transition-colors ${themeClasses.title} leading-tight mb-1`}>
                 {pkg.name}
               </h3>
-              <div className="flex items-center gap-1">
-                {pkg.deploymentType === 'intune' && (
-                  <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded border border-blue-500/30">
-                    Intune
-                  </span>
-                )}
-                {pkg.isPatchMyPC && (
-                  <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded border border-purple-500/30 flex items-center gap-1">
-                    <Wrench className="h-3 w-3" />
-                    PMPC
-                  </span>
-                )}
-                {pkg.isDynamicInstall && (
-                  <span className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded border border-orange-500/30 flex items-center gap-1">
-                    <Zap className="h-3 w-3" />
-                    C/D
-                  </span>
-                )}
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
               <p className={`text-sm ${themeClasses.version}`}>{pkg.version}</p>
-              <span className={`text-xs px-2 py-1 rounded ${themeClasses.badge}`}>
-                {getFileTypeDisplay(pkg.fileTypes)}
-              </span>
             </div>
           </div>
+          <ChevronRight className={`h-5 w-5 group-hover:translate-x-1 transition-all duration-200 ${themeClasses.chevron} flex-shrink-0`} />
         </div>
-        <ChevronRight className={`h-5 w-5 group-hover:translate-x-1 transition-all duration-200 ${themeClasses.chevron}`} />
+
+        <div className="flex flex-wrap gap-2 mb-4">
+          <span className={`text-xs px-2 py-1 rounded ${themeClasses.badge}`}>
+            {getFileTypeDisplay(pkg.fileTypes)}
+          </span>
+          {pkg.deploymentType === 'intune' && (
+            <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded border border-blue-500/30">
+              Intune
+            </span>
+          )}
+          {pkg.isPatchMyPC && (
+            <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded border border-purple-500/30 flex items-center gap-1">
+              <Wrench className="h-3 w-3" />
+              PMPC
+            </span>
+          )}
+          {pkg.isDynamicInstall && (
+            <span className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded border border-orange-500/30 flex items-center gap-1">
+              <Zap className="h-3 w-3" />
+              C/D
+            </span>
+          )}
+        </div>
+
+        {/* Summary */}
+        <p className={`text-sm leading-relaxed ${themeClasses.summary} mb-4`}>
+          {pkg.summary}
+        </p>
       </div>
 
       <div className="space-y-3">
         {/* Platform badges */}
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {pkg.platform.map((platform) => (
             <span
               key={platform}
@@ -140,8 +144,8 @@ export default function PackageTile({ package: pkg, onClick }: PackageTileProps)
           ))}
         </div>
 
-        {/* Status badge */}
-        <div className="flex items-center justify-between">
+        {/* Status badge and last updated date */}
+        <div className="flex items-center justify-between pt-3 border-t border-current/20">
           <span className={`inline-flex items-center px-2.5 py-1 text-xs rounded-md border ${getStatusColor(pkg.status)}`}>
             {pkg.status.charAt(0).toUpperCase() + pkg.status.slice(1).replace('-', ' ')}
           </span>
@@ -150,11 +154,6 @@ export default function PackageTile({ package: pkg, onClick }: PackageTileProps)
             {new Date(pkg.lastUpdated).toLocaleDateString()}
           </div>
         </div>
-
-        {/* Summary */}
-        <p className={`text-sm leading-relaxed ${themeClasses.summary}`}>
-          {pkg.summary}
-        </p>
       </div>
     </div>
   );

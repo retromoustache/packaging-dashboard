@@ -84,6 +84,11 @@ function App() {
     setEditingPackage(null);
   };
 
+  const handleUpdatePackage = (updatedPackage: Package) => {
+    setPackages(prev => prev.map(pkg => (pkg.id === updatedPackage.id ? updatedPackage : pkg)));
+    setSelectedPackage(updatedPackage);
+  };
+
   const handleSavePackage = (packageData: Omit<Package, 'id' | 'createdAt'>) => {
     if (editingPackage) {
       // Update existing package
@@ -186,7 +191,7 @@ function App() {
     <div className={getThemeClasses()}>
       {/* Header */}
       <header className={getHeaderClasses()}>
-        <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="max-w-screen-2xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
@@ -232,7 +237,7 @@ function App() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
+      <main className="max-w-screen-2xl mx-auto px-6 py-8">
         <FilterBar
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
@@ -268,6 +273,8 @@ function App() {
           }}
           onEdit={handleEditPackage}
           onDelete={handleDeletePackage}
+          onUpdatePackage={handleUpdatePackage}
+          theme={theme}
         />
       )}
 
@@ -280,6 +287,7 @@ function App() {
         onSave={handleSavePackage}
         editingPackage={editingPackage}
         onCancelEdit={handleCancelEdit}
+        theme={theme}
       />
 
       <SettingsModal
@@ -292,6 +300,7 @@ function App() {
       <ServerInfoModal
         isOpen={isServerInfoOpen}
         onClose={() => setIsServerInfoOpen(false)}
+        theme={theme}
       />
     </div>
   );

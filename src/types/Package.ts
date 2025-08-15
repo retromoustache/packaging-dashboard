@@ -28,11 +28,6 @@ export interface Package {
     hasScript: boolean;
   };
   toolsUsed: string[];
-  folderPaths: {
-    source: string;
-    deployment: string;
-    logs: string;
-  };
   sccmDeployment?: {
     installCommand: string;
     uninstallCommand: string;
@@ -42,6 +37,16 @@ export interface Package {
     repairStartIn?: string;
     productCode?: string;
   };
+  folderPaths?: {
+    source: string;
+    deployment: string;
+    logs: string;
+  };
+  scripts?: {
+    name: string;
+    content: string;
+    type: 'powershell' | 'vbscript' | 'batch' | 'other';
+  }[];
   licensing: {
     type: string;
     expiryDate?: string;
