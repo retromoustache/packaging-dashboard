@@ -1,1 +1,0 @@
-A sleek modern Package Dashboard Manager for tracking, auditing and reviewing deployed application for client devices and servers.
