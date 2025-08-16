@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Package } from '../types/Package';
-import { X, Copy, Calendar, FolderOpen, FileText, PenTool as Tool, Shield, MessageSquare, CheckCircle, AlertCircle, Clock, XCircle, User, Users, History, Cloud, FileCode, ArrowLeft, ChevronRight, Plus } from 'lucide-react';
+import { X, Copy, Calendar, FolderOpen, FileText, PenTool as Tool, Shield, MessageSquare, CheckCircle, AlertCircle, Clock, XCircle, User, Users, History, Cloud, FileCode, ArrowLeft, ChevronRight, Plus, Trash2 } from 'lucide-react';
 import ScriptWizardModal from './ScriptWizardModal';
+import ConfirmationModal from './ConfirmationModal';
 
 interface PackageModalProps {
   package: Package;
@@ -18,6 +19,7 @@ export default function PackageModal({ package: pkg, isOpen, onClose, onEdit, on
   const [selectedScript, setSelectedScript] = useState<NonNullable<Package['scripts']>[number] | null>(null);
   const [isScriptWizardOpen, setIsScriptWizardOpen] = useState(false);
   const [copiedIdentifier, setCopiedIdentifier] = useState<string | null>(null);
+  const [scriptToDelete, setScriptToDelete] = useState<number | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -25,6 +27,7 @@ export default function PackageModal({ package: pkg, isOpen, onClose, onEdit, on
       setSelectedScript(null);
       setIsScriptWizardOpen(false);
       setCopiedIdentifier(null);
+      setScriptToDelete(null);
     }
   }, [isOpen]);
 
@@ -51,6 +54,22 @@ export default function PackageModal({ package: pkg, isOpen, onClose, onEdit, on
 
   const handleCloseScriptWizard = () => {
     setIsScriptWizardOpen(false);
+  };
+
+  const handleDeleteScript = (index: number) => {
+    setScriptToDelete(index);
+  };
+
+  const confirmDeleteScript = () => {
+    if (scriptToDelete !== null && pkg.scripts) {
+      const updatedScripts = pkg.scripts.filter((_, index) => index !== scriptToDelete);
+      const updatedPackage = {
+        ...pkg,
+        scripts: updatedScripts,
+      };
+      onUpdatePackage(updatedPackage);
+      setScriptToDelete(null);
+    }
   };
 
   const formatTimeRemaining = (expiryDate: string) => {
@@ -425,7 +444,15 @@ export default function PackageModal({ package: pkg, isOpen, onClose, onEdit, on
                           <p className={`${getTextClasses('code')} font-medium`}>{script.name}</p>
                           <p className={`${getTextClasses('tertiary')} text-sm`}>{script.type}</p>
                         </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDeleteScript(index); }}
+                            className={`p-1 ${getButtonClasses('ghost')} hover:text-red-400 transition-colors`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
                         <ChevronRight className={`h-5 w-5 ${getTextClasses('secondary')}`} />
+                        </div>
                       </button>
                     ))
                   ) : (
@@ -717,6 +744,17 @@ export default function PackageModal({ package: pkg, isOpen, onClose, onEdit, on
         isOpen={isScriptWizardOpen}
         onClose={handleCloseScriptWizard}
         onSave={handleSaveScript}
+        theme={theme}
+      />
+
+      <ConfirmationModal
+        isOpen={scriptToDelete !== null}
+        onClose={() => setScriptToDelete(null)}
+        onConfirm={confirmDeleteScript}
+        title="Delete File"
+        message={`Are you sure you want to delete "${pkg.scripts?.[scriptToDelete || 0]?.name}"? This action cannot be undone.`}
+        confirmText="Delete File"
+        type="danger"
         theme={theme}
       />
     </div>

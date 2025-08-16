@@ -5,10 +5,11 @@ import { Monitor, Apple, Calendar, Package as PackageIcon, ChevronRight, Zap, Wr
 interface PackageTileProps {
   package: Package;
   onClick: () => void;
+  viewMode: 'grid' | 'compact' | 'list';
   theme: string;
 }
 
-export default function PackageTile({ package: pkg, onClick, theme }: PackageTileProps) {
+export default function PackageTile({ package: pkg, onClick, viewMode, theme }: PackageTileProps) {
   const getThemeClasses = (currentTheme: string) => {
     if (currentTheme === 'amoled') {
       return {
@@ -80,6 +81,68 @@ export default function PackageTile({ package: pkg, onClick, theme }: PackageTil
 
   const themeClasses = getThemeClasses(theme);
 
+  if (viewMode === 'compact') {
+    return (
+      <div
+        onClick={onClick}
+        className={`group ${themeClasses.container} rounded-lg p-3 cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 flex flex-col items-center text-center`}
+      >
+        <div className="w-8 h-8 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-md flex items-center justify-center border border-blue-500/30 mb-2">
+          <PackageIcon className="h-4 w-4 text-blue-400" />
+        </div>
+        <h3 className={`font-medium text-sm transition-colors ${themeClasses.title} leading-tight mb-1 line-clamp-2`}>
+          {pkg.name}
+        </h3>
+        <p className={`text-xs ${themeClasses.version} mb-2`}>{pkg.version}</p>
+        <span className={`inline-flex items-center px-2 py-0.5 text-xs rounded-md border ${getStatusColor(pkg.status)}`}>
+          {pkg.status.charAt(0).toUpperCase() + pkg.status.slice(1).replace('-', ' ')}
+        </span>
+      </div>
+    );
+  }
+
+  if (viewMode === 'list') {
+    return (
+      <div
+        onClick={onClick}
+        className={`group ${themeClasses.container} rounded-lg p-4 cursor-pointer transition-all duration-300 hover:shadow-lg flex items-center gap-4`}
+      >
+        <div className="w-10 h-10 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center border border-blue-500/30 flex-shrink-0">
+          <PackageIcon className="h-5 w-5 text-blue-400" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className={`font-semibold transition-colors ${themeClasses.title} truncate`}>
+              {pkg.name}
+            </h3>
+            <span className={`text-sm ${themeClasses.version} flex-shrink-0`}>{pkg.version}</span>
+          </div>
+          <p className={`text-sm ${themeClasses.summary} line-clamp-1`}>
+            {pkg.summary}
+          </p>
+        </div>
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="flex flex-wrap gap-1">
+            {pkg.platform.map((platform) => (
+              <span
+                key={platform}
+                className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md ${themeClasses.badge}`}
+              >
+                {getPlatformIcon(platform)}
+                {platform}
+              </span>
+            ))}
+          </div>
+          <span className={`inline-flex items-center px-2.5 py-1 text-xs rounded-md border ${getStatusColor(pkg.status)}`}>
+            {pkg.status.charAt(0).toUpperCase() + pkg.status.slice(1).replace('-', ' ')}
+          </span>
+          <ChevronRight className={`h-5 w-5 group-hover:translate-x-1 transition-all duration-200 ${themeClasses.chevron}`} />
+        </div>
+      </div>
+    );
+  }
+
+  // Default grid view
   return (
     <div
       onClick={onClick}

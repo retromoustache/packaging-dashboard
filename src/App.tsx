@@ -7,7 +7,9 @@ import PackageModal from './components/PackageModal';
 import AddPackageForm from './components/AddPackageForm';
 import SettingsModal from './components/SettingsModal';
 import ServerInfoModal from './components/ServerInfoModal';
-import { Package as PackageIcon, Settings, Info } from 'lucide-react';
+import ConfirmationModal from './components/ConfirmationModal';
+import AuthModal from './components/AuthModal';
+import { Package as PackageIcon, Settings, Info, User, LogOut } from 'lucide-react';
 
 function App() {
   const [packages, setPackages] = useState<Package[]>(mockPackages);
@@ -17,7 +19,12 @@ function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isServerInfoOpen, setIsServerInfoOpen] = useState(false);
   const [editingPackage, setEditingPackage] = useState<Package | null>(null);
+  const [packageToDelete, setPackageToDelete] = useState<Package | null>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [user, setUser] = useState<{ username: string; role: 'admin' | 'user' } | null>(null);
   const [theme, setTheme] = useState('default');
+  const [viewMode, setViewMode] = useState<'grid' | 'compact' | 'list'>('grid');
+  const [statusFilter, setStatusFilter] = useState<string>('');
   
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
@@ -25,13 +32,24 @@ function App() {
   const [selectedStatus, setSelectedStatus] = useState('');
   const [sortBy, setSortBy] = useState('lastUpdated');
 
+  // Handle status filter from header clicks
+  const handleStatusFilterClick = (status: string) => {
+    if (selectedStatus === status) {
+      setSelectedStatus('');
+      setStatusFilter('');
+    } else {
+      setSelectedStatus(status);
+      setStatusFilter(status);
+    }
+  };
+
   // Filter and sort packages
   const filteredPackages = useMemo(() => {
     const filtered = packages.filter(pkg => {
       const matchesSearch = pkg.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            pkg.summary.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesPlatform = !selectedPlatform || pkg.platform.includes(selectedPlatform as (typeof pkg.platform)[number]);
-      const matchesStatus = !selectedStatus || pkg.status === selectedStatus;
+      const matchesStatus = !selectedStatus || pkg.status === selectedStatus || (statusFilter && pkg.status === statusFilter);
       
       return matchesSearch && matchesPlatform && matchesStatus;
     });
@@ -71,11 +89,29 @@ function App() {
   };
 
   const handleDeletePackage = () => {
-    if (selectedPackage) {
-      setPackages(prev => prev.filter(pkg => pkg.id !== selectedPackage.id));
+    setPackageToDelete(selectedPackage);
+  };
+
+  const confirmDeletePackage = () => {
+    if (packageToDelete) {
+      setPackages(prev => prev.filter(pkg => pkg.id !== packageToDelete.id));
       setIsModalOpen(false);
       setSelectedPackage(null);
+      setPackageToDelete(null);
     }
+  };
+
+  const handleLogin = (username: string, password: string) => {
+    // Demo authentication
+    if (username === 'admin') {
+      setUser({ username, role: 'admin' });
+    } else {
+      setUser({ username, role: 'user' });
+    }
+  };
+
+  const handleLogout = () => {
+    setUser(null);
   };
 
   const handleCancelEdit = () => {
@@ -139,12 +175,12 @@ function App() {
         body.classList.add('theme-default');
     }
 
-    if (isModalOpen || isAddFormOpen || isSettingsOpen || isServerInfoOpen) {
+    if (isModalOpen || isAddFormOpen || isSettingsOpen || isServerInfoOpen || packageToDelete || isAuthModalOpen) {
       body.classList.add('no-scroll');
     } else {
       body.classList.remove('no-scroll');
     }
-  }, [theme, isModalOpen, isAddFormOpen, isSettingsOpen, isServerInfoOpen]);
+  }, [theme, isModalOpen, isAddFormOpen, isSettingsOpen, isServerInfoOpen, packageToDelete, isAuthModalOpen]);
 
   const getThemeClasses = () => {
     switch (theme) {
@@ -185,6 +221,14 @@ function App() {
     }
   };
 
+  const getStatusHighlight = (status: string) => {
+    if (selectedStatus === status || statusFilter === status) {
+      return status === 'live' ? 'text-emerald-400' : 
+             status === 'in-progress' ? 'text-amber-400' : 'text-red-400';
+    }
+    return textClasses.tertiary;
+  };
+
   const textClasses = getTextClasses();
 
   return (
@@ -205,16 +249,31 @@ function App() {
             <div className="flex items-center gap-4">
               <div className="hidden sm:flex items-center gap-6 text-sm">
                 <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleStatusFilterClick('live')}
+                    className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                  >
                   <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
-                  <span className={textClasses.tertiary}>{statusCounts.live} Live</span>
+                    <span className={getStatusHighlight('live')}>{statusCounts.live} Live</span>
+                  </button>
                 </div>
                 <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleStatusFilterClick('in-progress')}
+                    className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                  >
                   <div className="w-3 h-3 bg-amber-500 rounded-full"></div>
-                  <span className={textClasses.tertiary}>{statusCounts.inProgress} In Progress</span>
+                    <span className={getStatusHighlight('in-progress')}>{statusCounts.inProgress} In Progress</span>
+                  </button>
                 </div>
                 <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleStatusFilterClick('deprecated')}
+                    className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                  >
                   <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <span className={textClasses.tertiary}>{statusCounts.deprecated} Deprecated</span>
+                    <span className={getStatusHighlight('deprecated')}>{statusCounts.deprecated} Deprecated</span>
+                  </button>
                 </div>
               </div>
               <button 
@@ -231,6 +290,28 @@ function App() {
               >
                 <Settings className="h-5 w-5" />
               </button>
+              {user ? (
+                <div className="flex items-center gap-2">
+                  <span className={`text-sm ${textClasses.secondary}`}>
+                    {user.username} ({user.role})
+                  </span>
+                  <button 
+                    onClick={handleLogout}
+                    className={`p-2 ${textClasses.secondary} hover:${textClasses.tertiary} transition-colors`}
+                    title="Sign Out"
+                  >
+                    <LogOut className="h-5 w-5" />
+                  </button>
+                </div>
+              ) : (
+                <button 
+                  onClick={() => setIsAuthModalOpen(true)}
+                  className={`p-2 ${textClasses.secondary} hover:${textClasses.tertiary} transition-colors`}
+                  title="Sign In"
+                >
+                  <User className="h-5 w-5" />
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -248,6 +329,8 @@ function App() {
           sortBy={sortBy}
           onSortChange={setSortBy}
           onAddPackage={handleAddPackage}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
         />
 
         <div className="mb-6">
@@ -259,6 +342,8 @@ function App() {
         <PackageGrid
           packages={filteredPackages}
           onPackageClick={handlePackageClick}
+          viewMode={viewMode}
+          theme={theme}
         />
       </main>
 
@@ -300,6 +385,24 @@ function App() {
       <ServerInfoModal
         isOpen={isServerInfoOpen}
         onClose={() => setIsServerInfoOpen(false)}
+        theme={theme}
+      />
+
+      <ConfirmationModal
+        isOpen={packageToDelete !== null}
+        onClose={() => setPackageToDelete(null)}
+        onConfirm={confirmDeletePackage}
+        title="Delete Package"
+        message={`Are you sure you want to delete "${packageToDelete?.name}"? This will permanently remove the package and all its associated data. This action cannot be undone.`}
+        confirmText="Delete Package"
+        type="danger"
+        theme={theme}
+      />
+
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onLogin={handleLogin}
         theme={theme}
       />
     </div>

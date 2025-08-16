@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Filter, Plus } from 'lucide-react';
+import { Search, Filter, Plus, Grid3X3, List, LayoutGrid } from 'lucide-react';
 
 interface FilterBarProps {
   searchQuery: string;
@@ -11,6 +11,8 @@ interface FilterBarProps {
   sortBy: string;
   onSortChange: (sort: string) => void;
   onAddPackage: () => void;
+  viewMode: 'grid' | 'compact' | 'list';
+  onViewModeChange: (mode: 'grid' | 'compact' | 'list') => void;
 }
 
 export default function FilterBar({
@@ -22,7 +24,9 @@ export default function FilterBar({
   onStatusChange,
   sortBy,
   onSortChange,
-  onAddPackage
+  onAddPackage,
+  viewMode,
+  onViewModeChange
 }: FilterBarProps) {
   const getThemeClasses = () => {
     const body = document.body;
@@ -104,14 +108,42 @@ export default function FilterBar({
           </div>
         </div>
 
-        {/* Add Package Button */}
-        <button
-          onClick={onAddPackage}
-          className={`flex items-center gap-2 px-4 py-2.5 text-white rounded-lg font-medium transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-blue-500/25 ${themeClasses.button}`}
-        >
-          <Plus className="h-4 w-4" />
-          Add Package
-        </button>
+        {/* View Mode and Add Package */}
+        <div className="flex items-center gap-3">
+          {/* View Mode Toggle */}
+          <div className={`flex items-center ${themeClasses.select} rounded-lg p-1`}>
+            <button
+              onClick={() => onViewModeChange('grid')}
+              className={`p-2 rounded transition-colors ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-300'}`}
+              title="Grid View"
+            >
+              <Grid3X3 className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => onViewModeChange('compact')}
+              className={`p-2 rounded transition-colors ${viewMode === 'compact' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-300'}`}
+              title="Compact View"
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => onViewModeChange('list')}
+              className={`p-2 rounded transition-colors ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-300'}`}
+              title="List View"
+            >
+              <List className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Add Package Button */}
+          <button
+            onClick={onAddPackage}
+            className={`flex items-center gap-2 px-4 py-2.5 text-white rounded-lg font-medium transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-blue-500/25 ${themeClasses.button}`}
+          >
+            <Plus className="h-4 w-4" />
+            Add Package
+          </button>
+        </div>
       </div>
     </div>
   );
